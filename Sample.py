@@ -12,13 +12,27 @@ cap.set(6, cv2.VideoWriter.fourcc('M', 'J', 'P', 'G'))
 counter = 0 
 stage = None
 
+#Calculate angle function
+def calculate_angle(a,b,c):
+    a = np.array(a) # First
+    b = np.array(b) # Mid
+    c = np.array(c) # End
+    
+    radians = np.arctan2(c[1]-b[1], c[0]-b[0]) - np.arctan2(a[1]-b[1], a[0]-b[0])
+    angle = np.abs(radians*180.0/np.pi)
+    
+    if angle >180.0:
+        angle = 360-angle
+        
+    return angle 
+
 ## Setup mediapipe instance
 with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
     while cap.isOpened():
         ret, frame = cap.read()
         
         # Recolor image to RGB
-        image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        image = cv2.flip(frame, 1)
         image.flags.writeable = False
       
         # Make detection
@@ -34,7 +48,7 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
             
             # Get coordinates
             shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x,landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
-            elbow = [landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].x,landmpiparks[mp_pose.PoseLandmark.LEFT_ELBOW.value].y]
+            elbow = [landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].x,landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].y]
             wrist = [landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].x,landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].y]
             
             # Calculate angle
@@ -81,8 +95,8 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
                                 mp_drawing.DrawingSpec(color=(245,117,66), thickness=2, circle_radius=2), 
                                 mp_drawing.DrawingSpec(color=(245,66,230), thickness=2, circle_radius=2) 
                                  )               
-        
-        cv2.imshow('Mediapipe Feed', image)
+        imageMirror = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        cv2.imshow('Mediapipe Feed', imageMirror)
 
         if cv2.waitKey(10) & 0xFF == ord('q'):
             break
