@@ -11,8 +11,9 @@ cap.set(4, 1080)
 cap.set(6, cv2.VideoWriter.fourcc('M', 'J', 'P', 'G'))
 
 # Curl counter variables
-counter = 0 
+whileLoopCounter = 0 
 stage = None
+tilt = 0.0
 
 
 #Calculate angle function
@@ -53,6 +54,7 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
             rightShoulder = [landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y]
             leftShoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x,landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
 
+            refferenceShoulder = [0,0]
             # taking reference point on shoulder
             refferenceShoulder [1] = leftShoulder[1] if leftShoulder[1] > rightShoulder[1] else rightShoulder[1]
             refferenceShoulder [0] = rightShoulder [0] if refferenceShoulder[1] == leftShoulder[1] else leftShoulder[0]
@@ -61,38 +63,25 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
             # Defining first, mid and last points to find the tilt angle
             First = refferenceShoulder
             Mid = rightShoulder if refferenceShoulder[1] == rightShoulder[1] else leftShoulder
-            last = rightShoulder if mid == leftShoulder else leftShoulder
+            last = rightShoulder if Mid == leftShoulder else leftShoulder
             
             # Calculate angle
-            angle = calculate_angle(First, Mid, last)
-            counter = angle
-            
-            # Visualize angle
-            cv2.putText(image, str(angle), 
-                           tuple(np.multiply(elbow, Mid[0],Mid[1]).astype(int)), 
-                           cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA
-                                )
-                       
+            whileLoopCounter +=1
+            if(whileLoopCounter ==10):
+                tilt = calculate_angle(First, Mid, last)
+                whileLoopCounter=0           
         except:
             pass
 
         # Render curl counter
         # Setup status box
-        cv2.rectangle(image, (0,0), (225,73), (245,117,16), -1)
+        cv2.rectangle(image, (0,0), (350,80), (0,155,155), -1)
         
         # Rep data
-        cv2.putText(image, 'REPS', (15,12), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 1, cv2.LINE_AA)
-        cv2.putText(image, str(counter), 
-                    (10,60), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 2, (255,255,255), 2, cv2.LINE_AA)
-        
-        # Stage data
-        cv2.putText(image, 'STAGE', (65,12), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 1, cv2.LINE_AA)
-        cv2.putText(image, stage, 
-                    (60,60), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 2, (255,255,255), 2, cv2.LINE_AA)
+        cv2.putText(image, tiltDirection, (15,50), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255,255,255), 2, cv2.LINE_AA)
+        cv2.putText(image, ": " + format(tilt, ".2f"), (150,50), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255,255,255), 2, cv2.LINE_AA)
 
         # Render detections
         mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
