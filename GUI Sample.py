@@ -1,86 +1,90 @@
-import cv2
 import tkinter as tk
-from PIL import Image, ImageTk
-from threading import Thread
+import cv2
+import PIL.Image, PIL.ImageTk
+import threading
 
-class VideoApp:
-    def __init__(self, window):
+class VideoPlayer:
+    def __init__(self, window, video_source=0):
         self.window = window
-        self.window.title("Video App")
+        self.window.title("Video Player")
 
-        # Initialize OpenCV VideoCapture object
-        self.video = cv2.VideoCapture(0)
-        self.is_running = False
-        self.is_recording = False
+        # Open the video source
+        self.vid = cv2.VideoCapture(video_source)
+        self.width = self.vid.get(cv2.CAP_PROP_FRAME_WIDTH)
+        self.height = self.vid.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
-        # Create a canvas to display the video feed
-        self.canvas = tk.Canvas(window, width=800, height=600)
+        # Create a canvas that can fit the above video source size
+        self.canvas = tk.Canvas(window, width=self.width, height=self.height)
         self.canvas.pack()
 
-        # Create buttons
-        self.start_button = tk.Button(window, text="Start", command=self.start)
+        # Buttons
+        self.start_button = tk.Button(window, text="Start", width=10, command=self.start)
         self.start_button.pack(side=tk.LEFT)
-
-        self.stop_button = tk.Button(window, text="Stop", command=self.stop)
+        self.stop_button = tk.Button(window, text="Stop", width=10, command=self.stop)
         self.stop_button.pack(side=tk.LEFT)
-
-        self.record_button = tk.Button(window, text="Record", command=self.record)
+        self.record_button = tk.Button(window, text="Record", width=10, command=self.record)
         self.record_button.pack(side=tk.LEFT)
 
+        # Initialize variables
+        self.playing = False
+        self.recording = False
+        self.delay = 15  # milliseconds
         self.update()
 
-    def start(self):
-        if not self.is_running:
-            self.is_running = True
-            # Create a new thread to continuously read video frames
-            self.video_thread = Thread(target=self.video_loop)
-            self.video_thread.start()
-
-    def stop(self):
-        if self.is_running:
-            self.is_running = False
-            self.video_thread.join()
-
-    def record(self):
-        if not self.is_recording:
-            self.is_recording = True
-            # Create a new thread to continuously record frames
-            self.record_thread = Thread(target=self.record_loop)
-            self.record_thread.start()
-        else:
-            self.is_recording = False
-
-    def video_loop(self):
-        while self.is_running:
-            ret, frame = self.video.read()
-            if ret:
-                # Mirror the frame horizontally
-                frame = cv2.flip(frame, 1)
-                # Convert the frame to RGB
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                # Resize the frame to fit the canvas
-                frame = cv2.resize(frame, (800, 600))
-                # Create an ImageTk object from the frame
-                image = Image.fromarray(frame)
-                image_tk = ImageTk.PhotoImage(image)
-                # Update the canvas with the new image
-                self.canvas.create_image(0, 0, anchor=tk.NW, image=image_tk)
-                self.canvas.image = image_tk
-
-    def record_loop(self):
-        out = cv2.VideoWriter('output.avi', cv2.VideoWriter_fourcc(*'XVID'), 20.0, (640, 480))
-        while self.is_recording:
-            ret, frame = self.video.read()
-            if ret:
-                # Write the frame to the output video file
-                out.write(frame)
-        out.release()
+        self.window.mainloop()
 
     def update(self):
-        # Update the GUI every 10 milliseconds
-        self.window.after(10, self.update)
+        # Get a frame from the video source
+        ret, frame = self.vid.read()
 
-if __name__ == '__main__':
-    root = tk.Tk()
-    app = VideoApp(root)
-    root.mainloop()
+        if ret:
+            # Convert the frame to RGB format
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+            # Mirror the frame horizontally
+            frame = cv2.flip(frame, 1)
+
+            # Convert the frame to ImageTk format
+            self.photo = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(frame))
+
+            # Update the canvas with the new frame
+            self.canvas.create_image(0, 0, image=self.photo, anchor=tk.NW)
+
+        if self.playing:
+            self.window.after(self.delay, self.update)
+
+    def start(self):
+        if not self.playing:
+            self.playing = True
+            self.update()
+
+    def stop(self):
+        self.playing = False
+
+    def record(self):
+        self.recording = not self.recording
+
+        if self.recording:
+            self.record_button.config(text="Stop Recording")
+            self.record_video_thread = threading.Thread(target=self.record_video)
+            self.record_video_thread.start()
+        else:
+            self.record_button.config(text="Record")
+
+    def record_video(self):
+        # Define the codec and create a VideoWriter object
+        fourcc = cv2.VideoWriter_fourcc(*"XVID")
+        output = cv2.VideoWriter("recorded_video.avi", fourcc, 20.0, (int(self.width), int(self.height)))
+
+        while self.recording:
+            ret, frame = self.vid.read()
+
+            if ret:
+                # Write the frame to the file
+                output.write(frame)
+
+        # Release the VideoWriter and close the file
+        output.release()
+
+window = tk.Tk()
+app = VideoPlayer(window)
