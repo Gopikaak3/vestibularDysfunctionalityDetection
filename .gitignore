@@ -158,3 +158,21 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+/vestibularNISH/pyvenv.cfg
+/vestibularNISH/Scripts/activate
+/vestibularNISH/Scripts/activate.bat
+/vestibularNISH/Scripts/f2py.exe
+/vestibularNISH/Scripts/fonttools.exe
+/vestibularNISH/Scripts/pip.exe
+/vestibularNISH/Scripts/pip3.11.exe
+/vestibularNISH/Scripts/pip3.exe
+/vestibularNISH/Scripts/psghelp.exe
+/vestibularNISH/Scripts/psgissue.exe
+/vestibularNISH/Scripts/psgmain.exe
+/vestibularNISH/Scripts/psgsettings.exe
+/vestibularNISH/Scripts/psgupgrade.exe
+/vestibularNISH/Scripts/psgver.exe
+/vestibularNISH/Scripts/pyftmerge.exe
+/vestibularNISH/Scripts/pyftsubset.exe
+/vestibularNISH/Scripts/ttx.exe
+/vestibularNISH/share/man/man1/ttx.1
