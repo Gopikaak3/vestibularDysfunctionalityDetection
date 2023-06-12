@@ -5,12 +5,7 @@ import pyrealsense2 as rs
 
 #initiation
 mp_drawing = mp.solutions.drawing_utils
-mp_pose = mp.solutions.pose
-# cap = cv2.VideoCapture(0)
-# cap.set(3, 1920)
-# cap.set(4, 1080)
-# cap.set(6, cv2.VideoWriter.fourcc('M', 'J', 'P', 'G'))
-
+mp_pose = mp.solutions.pose                                                   
 
 # variables
 whileLoopCounter = 0 
@@ -81,7 +76,7 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
             # Calculate angle
             whileLoopCounter +=1
             if(whileLoopCounter == 10):
-                tilt = calculate_angle(Firstq, Mid, last)
+                tilt = calculate_angle(First, Mid, last)
                 whileLoopCounter = 0
         except:
             pass
